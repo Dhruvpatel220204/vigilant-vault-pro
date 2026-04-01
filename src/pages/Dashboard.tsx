@@ -21,7 +21,7 @@ export default function Dashboard() {
   const [devices, setDevices] = useState<any[]>([]);
   const [loginAttempts, setLoginAttempts] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
-  const [trustScore, setTrustScore] = useState({ score: 50, level: 'medium' as const });
+  const [trustScore, setTrustScore] = useState<{ score: number; level: 'low' | 'medium' | 'high' | 'critical' }>({ score: 50, level: 'medium' });
 
   const loadData = useCallback(async () => {
     if (!user) return;
