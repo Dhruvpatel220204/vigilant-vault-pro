@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getDeviceInfo } from '@/lib/device-fingerprint';
 
 interface AuthContextType {
   user: User | null;
@@ -44,7 +45,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const device = getDeviceInfo();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // Log the attempt regardless of success/failure
+    try {
+      await supabase.from('login_attempts').insert({
+        email,
+        user_id: data?.user?.id ?? null,
+        success: !error,
+        failure_reason: error?.message ?? null,
+        risk_level: error ? 'high' : 'low',
+        browser: device.browser,
+        os: device.os,
+        ip_address: null,
+        location: null,
+      });
+    } catch (e) {
+      console.error('Failed to log login attempt', e);
+    }
+
     return { error: error as Error | null };
   };
 
